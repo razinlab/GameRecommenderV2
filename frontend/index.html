@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Pusher - Game Recommendations</title> <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@300;400;500;700&display=swap');
+
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #282828;
+            --detail-bg: #222222;
+            --text-color: #cccccc;
+            --text-light: #e0e0e0;
+            --border-color: #444444;
+            --accent-color: #00c6ff;
+            --secondary-accent-color: #ff6b6b;
+            --star-empty-color: #777777;
+            --star-filled-color: #ffd700;
+            --header-height: 70px;
+            --card-image-width: 80px;
+            --card-image-height: 112px;
+            --detail-cover-width: 150px;
+            --detail-cover-height: 210px;
+            --details-panel-width: 380px;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Roboto', sans-serif;
+            font-weight: 300;
+            margin: 0;
+            padding: 0;
+            color: var(--text-color);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        .area-loader-container {
+            display: none;
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-light);
+        }
+        .area-loader-container .loader { margin-bottom: 15px; }
+        .area-loader-container p { font-family: 'Press Start 2P', cursive; font-size: 0.9em; }
+
+
+        #startupLoader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(26, 26, 26, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            flex-direction: column;
+            color: var(--text-light);
+            font-family: 'Press Start 2P', cursive;
+            transition: opacity 0.5s ease-out;
+        }
+        #startupLoader .loader { width: 50px; height: 50px; border-top-color: var(--secondary-accent-color); }
+        #startupLoader p { margin-top: 20px; font-size: 1.1em; }
+
+
+        .site-wrapper { display: flex; width: 100%; }
+        .main-column {
+            width: 100%; min-height: 100vh; box-sizing: border-box;
+            padding-top: var(--header-height); display: flex; flex-direction: column;
+            align-items: center; transition: margin-right 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            overflow-x: hidden;
+        }
+        .details-column {
+            width: var(--details-panel-width); min-height: 100vh; height: 100vh;
+            box-sizing: border-box; padding-top: var(--header-height);
+            background-color: var(--detail-bg); overflow-y: auto; overflow-x: hidden;
+            position: fixed; right: 0; top: 0;
+            transform: translateX(100%);
+            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 999; border-left: 1px solid var(--border-color);
+            box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+        }
+
+        header {
+            width: 100%; height: var(--header-height);
+            background-color: rgba(20, 20, 20, 0.85); backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px); padding: 0 40px; box-sizing: border-box;
+            display: flex; justify-content: space-between; align-items: center;
+            position: fixed; top: 0; left: 0; z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+        }
+        header .logo-link { text-decoration: none; }
+        header .logo { font-family: 'Press Start 2P', cursive; font-size: 1.6em; color: var(--text-light); }
+        header nav { display: flex; align-items: center; }
+        header nav a { color: #bbbbbb; text-decoration: none; margin-left: 30px; font-size: 0.95em; transition: color 0.3s ease; }
+        header nav a:hover { color: #ffffff; }
+        .nav-username { color: var(--text-light); margin-left: 20px; font-size: 0.9em; }
+
+
+        .content-container { width: 100%; max-width: 900px; padding: 30px 20px; box-sizing: border-box; }
+        .input-section { width: 100%; max-width: 700px; margin: 0 auto 30px auto; display: flex; flex-direction: column; align-items: center; }
+        .game-description-input { width: 100%; min-height: 100px; background-color: #333333; border: 1px solid #555555; border-radius: 6px; padding: 15px; font-size: 1em; color: var(--text-light); box-sizing: border-box; margin-bottom: 20px; resize: vertical; }
+        .game-description-input::placeholder { color: #888888; }
+        .game-description-input:focus { background-color: #383838; border-color: var(--accent-color); outline: none; }
+
+        .button-container { display: flex; gap: 15px; width: 100%; justify-content: center; }
+        .action-button {
+            border: none; padding: 12px 30px; font-size: 1.1em; font-weight: 500;
+            border-radius: 8px; cursor: pointer; transition: background-color 0.3s ease, transform 0.1s ease;
+            flex-grow: 1; max-width: 250px;
+        }
+        .action-button:active { transform: scale(0.98); }
+        .action-button:disabled { background-color: #555 !important; color: #888 !important; cursor: not-allowed; }
+        .recommend-button { background-color: #ffffff; color: var(--bg-color); }
+        .recommend-button:hover:not(:disabled) { background-color: #f0f0f0; }
+        .surprise-button { background-color: var(--secondary-accent-color); color: #ffffff; }
+        .surprise-button:hover:not(:disabled) { background-color: #e65c5c; }
+
+
+        .status-message {
+            width: 100%; text-align: center; font-size: 1em; color: #aaaaaa;
+            margin: 20px 0; font-family: 'Press Start 2P', cursive; display: none;
+        }
+
+        .recommendations-area { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes slideInUpFadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .game-card {
+            background-color: var(--card-bg); border-radius: 6px; border: 1px solid var(--border-color);
+            padding: 10px; display: flex; align-items: flex-start; gap: 10px;
+            transition: box-shadow 0.2s ease-in-out; overflow: hidden;
+            opacity: 0; animation-name: slideInUpFadeIn; animation-duration: 0.4s;
+            animation-fill-mode: forwards; animation-timing-function: ease-out;
+            position: relative;
+        }
+        .game-card:hover { box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .game-card-clickable-area {
+            flex-grow: 1; display: flex; gap: 10px; cursor: pointer;
+            align-items: flex-start;
+        }
+        .game-card-cover-container { width: var(--card-image-width); height: var(--card-image-height); flex-shrink: 0; border-radius: 4px; overflow: hidden; background-color: #333; }
+        .game-card-cover-container img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .game-card-info { flex-grow: 1; min-width: 0; }
+        .game-card .game-title {
+            font-size: 1em; color: var(--text-light); font-weight: 500;
+            margin: 0 0 6px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .game-card .game-genres {
+            font-size: 0.75em; color: var(--accent-color); margin-bottom: 4px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .favorite-star {
+            font-family: 'Arial', sans-serif;
+            font-size: 1.5em;
+            color: var(--star-empty-color);
+            cursor: pointer;
+            transition: color 0.2s ease, transform 0.2s ease;
+            padding: 5px;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            z-index: 5;
+        }
+        .favorite-star:hover { transform: scale(1.2); }
+        .favorite-star.saved { color: var(--star-filled-color); }
+
+
+        .game-detail-panel { padding: 20px; box-sizing: border-box; color: var(--text-light); }
+        .game-detail-panel .close-detail-btn { background: var(--accent-color); color: var(--bg-color); border: none; padding: 10px 18px; font-size: 1em; font-weight: 500; border-radius: 6px; cursor: pointer; margin-bottom: 20px; display: inline-flex; align-items:center; gap: 5px; }
+        .detail-header { display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-start; position: relative;}
+        .detail-header .favorite-star {
+            font-size: 2em;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .detail-cover img { width: var(--detail-cover-width); height: var(--detail-cover-height); object-fit: cover; border-radius: 6px; background-color: #333; flex-shrink: 0; }
+        .detail-title-section { flex-grow: 1; min-width: 0; }
+        .detail-title-section h1 {
+            font-family: 'Press Start 2P', cursive; font-size: 1.5em;
+            margin: 0 0 10px 0; line-height: 1.3; color: var(--text-light);
+            word-break: break-word; overflow-wrap: break-word; padding-right: 30px;
+        }
+        .detail-info-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom:12px;}
+        .detail-info-item strong { color: var(--accent-color); }
+        .detail-info-item { font-size: 0.85em; word-break: break-word; }
+        .detail-tags-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+        .detail-tags-container span { background-color: #444; color: var(--text-light); padding: 4px 8px; border-radius: 4px; font-size: 0.8em; }
+        .detail-links-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .detail-link { display: inline-flex; align-items: center; background-color: #383838; padding: 7px 10px; border-radius: 6px; text-decoration: none; color: var(--text-light); transition: background-color 0.2s ease; font-size: 0.9em; }
+        .detail-link:hover { background-color: var(--accent-color); color: var(--bg-color); }
+        .detail-link img { width: 18px; height: 18px; margin-right: 6px; }
+        .detail-section h2 { font-family: 'Press Start 2P', cursive; font-size: 1.1em; color: var(--accent-color); border-bottom: 1px solid var(--border-color); padding-bottom: 7px; margin: 20px 0 10px 0; }
+        .detail-section p, .detail-section ul { font-size: 0.9em; line-height: 1.6; color: var(--text-color); word-break: break-word; }
+        .detail-section ul { list-style: disc; padding-left: 18px; }
+        .screenshot-carousel { position: relative; max-width: 100%; margin: 15px auto; overflow: hidden; border-radius: 8px; background-color: #111; }
+        .carousel-track { display: flex; transition: transform 0.5s ease-in-out; }
+        .carousel-slide { min-width: 100%; box-sizing: border-box; }
+        .carousel-slide img { width: 100%; height: auto; max-height: 250px; object-fit: contain; display: block; }
+        .carousel-button { position: absolute; top: 50%; transform: translateY(-50%); background-color: rgba(0,0,0,0.6); color: white; border: none; font-size: 1.6em; padding: 8px 10px; cursor: pointer; z-index: 10; border-radius: 50%; line-height: 1; }
+        .carousel-button.prev { left: 10px; }
+        .carousel-button.next { right: 10px; }
+        .carousel-button:hover { background-color: rgba(0,0,0,0.9); }
+        .similar-games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--card-image-width), 1fr)); gap: 10px; }
+        .similar-game-card .game-card-cover-container { width: var(--card-image-width); height: var(--card-image-height); }
+        .similar-game-card .game-title { font-size: 0.9em; }
+
+
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 1050; }
+        .toast-message { padding: 10px 15px; background-color: #333; color: white; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); font-size: 0.9em; opacity: 0; transition: opacity 0.3s ease; }
+        .toast-message.show { opacity: 1; }
+        .toast-message.success { background-color: #51cf66; color: #111; }
+        .toast-message.error { background-color: #ff6b6b; color: white; }
+
+    </style>
+</head>
+<body>
+
+    <div id="startupLoader">
+        <div class="loader"></div>
+        <p>Initializing Pixel Pusher...</p>
+    </div>
+
+    <header> <a href="index.html" class="logo-link"><div class="logo">Pixel Pusher</div></a> <nav> <a href="index.html">Home</a> <a id="navLoginLink" href="login.html" style="display: inline;">Login</a>
+            <a id="navMyGamesLink" href="my_games.html" style="display: none;">My Games</a>
+            <a id="navLogoutLink" href="#" style="display: none;">Logout</a>
+            <span id="navUsername" class="nav-username" style="display: none;"></span>
+        </nav>
+    </header>
+
+    <div class="site-wrapper" id="siteWrapper">
+        <div class="main-column" id="mainColumn">
+            <div class="content-container">
+                <div class="input-section">
+                    <textarea class="game-description-input" id="gameDescription" placeholder="Describe the game... e.g., 'cozy farming sim'"></textarea>
+                    <div class="button-container">
+                        <button class="action-button recommend-button" id="recommendBtn">Recommend</button>
+                        <button class="action-button surprise-button" id="surpriseBtn">Surprise Me!</button>
+                    </div>
+                </div>
+
+                <div id="recommendationsLoader" class="area-loader-container">
+                    <div class="loader"></div>
+                    <p>Fetching games...</p>
+                </div>
+                <div id="statusMessage" class="status-message"></div> <div class="recommendations-area" id="recommendationsArea"></div>
+            </div>
+        </div>
+        <div class="details-column" id="detailsColumn">
+            <div class="game-detail-panel" id="gameDetailPanel" style="display: none;">
+
+                <div id="detailPanelLoader" class="area-loader-container" style="padding-top: 70px;">
+                    <div class="loader"></div>
+                    <p>Loading details...</p>
+                </div>
+                <div id="detailPanelContent"></div> </div>
+        </div>
+    </div>
+    <div class="toast-container" id="toastContainer"></div>
+
+
+    <script>
+
+        const API_BASE_URL = '';
+        const recommendBtn = document.getElementById('recommendBtn');
+        const surpriseBtn = document.getElementById('surpriseBtn');
+        const gameDescriptionInput = document.getElementById('gameDescription');
+        const recommendationsArea = document.getElementById('recommendationsArea');
+        const recommendationsLoader = document.getElementById('recommendationsLoader');
+        const statusMessage = document.getElementById('statusMessage');
+        const gameDetailPanel = document.getElementById('gameDetailPanel');
+        const detailPanelLoader = document.getElementById('detailPanelLoader');
+        const detailPanelContent = document.getElementById('detailPanelContent');
+        const detailsColumn = document.getElementById('detailsColumn');
+        const toastContainer = document.getElementById('toastContainer');
+        const startupLoader = document.getElementById('startupLoader');
+
+
+        let allRecommendedGamesData = [];
+        let currentDetailGameId = null;
+        let userSavedGameIds = new Set();
+
+
+        const navLoginLink = document.getElementById('navLoginLink');
+        const navMyGamesLink = document.getElementById('navMyGamesLink');
+        const navLogoutLink = document.getElementById('navLogoutLink');
+        const navUsername = document.getElementById('navUsername');
+        const pageToken = localStorage.getItem("token");
+        const pageUsername = localStorage.getItem("username");
+
+        function updateTopNavigation() {
+            if (pageToken && pageUsername) {
+                if (navLoginLink) navLoginLink.style.display = "none";
+                if (navMyGamesLink) navMyGamesLink.style.display = "inline";
+                if (navLogoutLink) navLogoutLink.style.display = "inline";
+                if (navUsername) { navUsername.textContent = `Hi, ${pageUsername}`; navUsername.style.display = "inline"; }
+                fetchUserSavedGames();
+            } else {
+                if (navLoginLink) navLoginLink.style.display = "inline";
+                if (navMyGamesLink) navMyGamesLink.style.display = "none";
+                if (navLogoutLink) navLogoutLink.style.display = "none";
+                if (navUsername) navUsername.style.display = "none";
+                userSavedGameIds.clear();
+
+                if(allRecommendedGamesData.length > 0) displayGameCards(allRecommendedGamesData);
+            }
+        }
+
+        if (navLogoutLink) {
+            navLogoutLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem("token");
+                localStorage.removeItem("username");
+                updateTopNavigation();
+
+
+                if (currentDetailGameId && gameDetailPanel.style.display === 'block') {
+                    const gameForDetail = allRecommendedGamesData.find(g => String(g.game_id) === currentDetailGameId);
+                    if(gameForDetail) renderDetailPanelContent(gameForDetail);
+                }
+                showToast("You have been logged out.", "info");
+            });
+        }
+
+        async function fetchUserSavedGames() {
+            if (!pageToken) return;
+            try {
+                const response = await fetch(`${API_BASE_URL}/saved-games`, {
+                    headers: { 'Authorization': `Bearer ${pageToken}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    userSavedGameIds = new Set(data.games.map(g => String(g.game_id)));
+
+                    if (allRecommendedGamesData.length > 0) {
+                        displayGameCards(allRecommendedGamesData);
+                    }
+
+                    if (currentDetailGameId && gameDetailPanel.style.display === 'block') {
+                        const gameForDetail = allRecommendedGamesData.find(g => String(g.game_id) === currentDetailGameId) ||
+                                             (await fetch(`${API_BASE_URL}/game_details/${currentDetailGameId}`).then(res => res.json()));
+                        if(gameForDetail) renderDetailPanelContent(gameForDetail);
+                    }
+                } else {
+                    console.warn("Could not fetch user's saved games. Status:", response.status);
+                    if(response.status === 401) {
+                        localStorage.removeItem("token"); localStorage.removeItem("username"); updateTopNavigation();
+                        showToast("Session expired. Please log in again.", "error");
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching user's saved games:", error);
+            }
+        }
+
+
+
+        function showToast(message, type = 'info', duration = 3000) {
+            const toast = document.createElement('div');
+            toast.className = `toast-message ${type}`;
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+
+
+        const platformLogos = {};
+        const storeLogos = {};
+
+        function getLogoHTML(name, logoMap, altTextPrefix = "") {
+            if (!name || typeof name !== 'string') return '';
+            const normalizedName = name.toLowerCase().trim();
+            let logoUrl = logoMap[name] || logoMap[normalizedName];
+
+            if (!logoUrl && logoMap === platformLogos) {
+                if (normalizedName.includes("windows")) logoUrl = platformLogos["Windows"];
+                else if (normalizedName.includes("playstation")) logoUrl = platformLogos["PlayStation"];
+                else if (normalizedName.includes("xbox")) logoUrl = platformLogos["Xbox"];
+                else if (normalizedName.includes("nintendo")) logoUrl = platformLogos["Nintendo Switch"];
+                else if (normalizedName.includes("mac")) logoUrl = platformLogos["macOS"];
+                else if (normalizedName.includes("linux")) logoUrl = platformLogos["Linux"];
+                else if (normalizedName.includes("android")) logoUrl = platformLogos["Android"];
+                else if (normalizedName.includes("ios")) logoUrl = platformLogos["iOS"];
+                else if (normalizedName.includes("game boy")) logoUrl = platformLogos["Game Boy"];
+                else if (normalizedName.includes("wii")) logoUrl = platformLogos["Wii"];
+            }
+
+            if (logoUrl) {
+                return `<img src="${logoUrl}" alt="${altTextPrefix}${name}" title="${name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 5px;">`;
+            }
+            return '';
+        }
+
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            updateTopNavigation();
+            if (recommendBtn) recommendBtn.addEventListener('click', handleRecommendClick);
+            if (surpriseBtn) surpriseBtn.addEventListener('click', handleSurpriseClick);
+
+            try {
+                await handleSurpriseClick(true);
+            } catch (error) {
+                console.error("Initial load failed:", error);
+                if (statusMessage) {
+                    statusMessage.textContent = "Could not load initial games. Please try again.";
+                    statusMessage.style.display = 'block';
+                }
+            } finally {
+                startupLoader.style.opacity = '0';
+                setTimeout(() => {
+                    startupLoader.style.display = 'none';
+                }, 500);
+            }
+        });
+
+        async function handleRecommendClick() {
+            const queryPrompt = gameDescriptionInput.value.trim();
+            if (!queryPrompt) { showToast('Please enter a game description.', 'error'); recommendationsArea.innerHTML = ''; statusMessage.style.display = 'none'; return; }
+
+            closeDetailPanel();
+            recommendationsArea.innerHTML = '';
+            statusMessage.style.display = 'none';
+            recommendationsLoader.style.display = 'block';
+
+            recommendBtn.disabled = true; if (surpriseBtn) surpriseBtn.disabled = true;
+            try {
+                const response = await fetch(`${API_BASE_URL}/recommend`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query_prompt: queryPrompt }) });
+                if (!response.ok) { const err = await response.json(); throw new Error(err.error || `Server error: ${response.status}`); }
+                const recommendedGames = await response.json();
+                allRecommendedGamesData = recommendedGames;
+                displayGameCards(recommendedGames);
+            } catch (error) {
+                console.error('Recommendation fetch error:', error);
+                statusMessage.textContent = error.message || 'Could not connect to service.';
+                statusMessage.style.display = 'block';
+                showToast(error.message || 'Could not connect to service.', 'error');
+            } finally {
+                recommendationsLoader.style.display = 'none';
+                recommendBtn.disabled = false; if (surpriseBtn) surpriseBtn.disabled = false;
+            }
+        }
+
+        async function handleSurpriseClick(isInitialLoad = false) {
+            closeDetailPanel();
+            recommendationsArea.innerHTML = '';
+            statusMessage.style.display = 'none';
+            if (!isInitialLoad) {
+                recommendationsLoader.style.display = 'block';
+            }
+
+            if (surpriseBtn) surpriseBtn.disabled = true; if (recommendBtn) recommendBtn.disabled = true;
+            try {
+                const response = await fetch(`${API_BASE_URL}/random_games`);
+                if (!response.ok) { const err = await response.json(); throw new Error(err.error || `Server error: ${response.status}`); }
+                const randomGames = await response.json();
+                allRecommendedGamesData = randomGames;
+                displayGameCards(randomGames);
+            } catch (error) {
+                console.error('Random games fetch error:', error);
+                 if (!isInitialLoad && statusMessage) {
+                    statusMessage.textContent = error.message || 'Could not connect for random games.';
+                    statusMessage.style.display = 'block';
+                }
+                showToast(error.message || 'Could not connect for random games.', 'error');
+                if (isInitialLoad) throw error;
+            } finally {
+                if (!isInitialLoad) {
+                    recommendationsLoader.style.display = 'none';
+                }
+                if (surpriseBtn) surpriseBtn.disabled = false; if (recommendBtn) recommendBtn.disabled = false;
+            }
+        }
+
+        function displayGameCards(games) {
+            recommendationsArea.innerHTML = '';
+            recommendationsLoader.style.display = 'none';
+
+            if (!games || games.length === 0) {
+                statusMessage.textContent = 'No games found.';
+                statusMessage.style.display = 'block';
+                return;
+            }
+            statusMessage.style.display = 'none';
+
+            games.forEach((game, index) => {
+                const card = document.createElement('div'); card.classList.add('game-card');
+                card.dataset.gameId = game.game_id; card.style.animationDelay = `${index * 0.07}s`;
+
+                const clickableArea = document.createElement('div'); clickableArea.classList.add('game-card-clickable-area');
+                clickableArea.addEventListener('click', () => showDetailPanel(String(game.game_id)));
+
+                const coverContainer = document.createElement('div'); coverContainer.classList.add('game-card-cover-container');
+                const img = document.createElement('img');
+                const cardImgWidth = getComputedStyle(document.documentElement).getPropertyValue('--card-image-width').trim();
+                const cardImgHeight = getComputedStyle(document.documentElement).getPropertyValue('--card-image-height').trim();
+                img.src = game.cover_url || `https://placehold.co/${cardImgWidth.replace('px','')}x${cardImgHeight.replace('px','')}/2c2c2e/e0e0e0?text=No+Cover`;
+                img.alt = game.name || "Game Cover"; img.onerror = function() { this.src=`https://placehold.co/${cardImgWidth.replace('px','')}x${cardImgHeight.replace('px','')}/2c2c2e/e0e0e0?text=Error`; }; coverContainer.appendChild(img);
+
+                const infoDiv = document.createElement('div'); infoDiv.classList.add('game-card-info');
+                const title = document.createElement('h3'); title.classList.add('game-title'); title.textContent = game.name || "Unknown Title";
+                const genresPreview = document.createElement('p'); genresPreview.classList.add('game-genres');
+                genresPreview.textContent = (game.genres && game.genres.length > 0) ? game.genres.slice(0, 3).join(', ') : "No genres listed";
+
+                infoDiv.appendChild(title); infoDiv.appendChild(genresPreview);
+                clickableArea.appendChild(coverContainer); clickableArea.appendChild(infoDiv); card.appendChild(clickableArea);
+
+                if (pageToken) {
+                    const star = document.createElement('span');
+                    star.classList.add('favorite-star');
+                    const isSaved = userSavedGameIds.has(String(game.game_id));
+                    star.innerHTML = isSaved ? '★' : '☆';
+                    if(isSaved) star.classList.add('saved');
+                    star.title = isSaved ? "Remove from favorites" : "Save to favorites";
+                    star.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleFavoriteStatus(game, star);
+                    });
+                    card.appendChild(star);
+                }
+                recommendationsArea.appendChild(card);
+            });
+        }
+
+        async function showDetailPanel(gameId) {
+            currentDetailGameId = gameId;
+            let gameData = allRecommendedGamesData.find(g => String(g.game_id) === gameId);
+
+            detailsColumn.style.transform = 'translateX(0)';
+            gameDetailPanel.style.display = 'block';
+            detailPanelContent.innerHTML = '';
+            detailPanelLoader.style.display = 'block';
+            gameDetailPanel.scrollTop = 0;
+
+            if (!gameData) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/game_details/${gameId}`);
+                    if (!response.ok) {const err = await response.json(); throw new Error(err.error || `Server error: ${response.status}`);}
+                    gameData = await response.json();
+                    if (gameData && typeof gameData.game_id !== 'undefined') {
+                         if (!allRecommendedGamesData.some(g => String(g.game_id) === String(gameData.game_id))) {
+                            allRecommendedGamesData.push(gameData);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error fetching details for game ID", gameId, ":", error);
+                    detailPanelLoader.style.display = 'none';
+                    detailPanelContent.innerHTML = `<button class="close-detail-btn" id="detailPanelCloseBtnError">← Back</button> <p style="text-align:center; margin-top:20px;">Error: ${error.message || 'Could not load details.'}</p>`;
+                    const errorCloseBtn = detailPanelContent.querySelector('#detailPanelCloseBtnError');
+                    if(errorCloseBtn) errorCloseBtn.addEventListener('click', closeDetailPanel);
+                    return;
+                }
+            }
+
+            detailPanelLoader.style.display = 'none';
+            if (gameData) {
+                 renderDetailPanelContent(gameData);
+            } else {
+                 detailPanelContent.innerHTML = `<button class="close-detail-btn" id="detailPanelCloseBtnNotFound">← Back</button> <p style="text-align:center; margin-top:20px;">Game details not found.</p>`;
+                 const notFoundCloseBtn = detailPanelContent.querySelector('#detailPanelCloseBtnNotFound');
+                 if(notFoundCloseBtn) notFoundCloseBtn.addEventListener('click', closeDetailPanel);
+            }
+        }
+
+
+        function renderDetailPanelContent(gameData) {
+            if (!gameData || typeof gameData.game_id === 'undefined') {
+                detailPanelContent.innerHTML = `<button class="close-detail-btn" id="detailPanelCloseBtnInvalid">← Back</button> <p style="text-align:center; margin-top:20px;">Invalid game data received.</p>`;
+                const invalidCloseBtn = detailPanelContent.querySelector('#detailPanelCloseBtnInvalid');
+                if(invalidCloseBtn) invalidCloseBtn.addEventListener('click', closeDetailPanel);
+                return;
+            }
+
+            const renderListAsTags = (list, typeClass) => (list && Array.isArray(list) && list.length > 0) ? list.map(item => `<span class="detail-tags ${typeClass}-tag">${item}</span>`).join('') : '<span>N/A</span>';
+            const renderLinks = (urls) => {
+                let linksHTML = '';
+                if (urls) {
+                    for (const [store, url] of Object.entries(urls)) {
+                        if (url && typeof url === 'string' && url.trim() !== '') {
+                            const logoHTML = getLogoHTML(store, storeLogos, `${store} `);
+                            linksHTML += `<a href="${url}" target="_blank" rel="noopener noreferrer" class="detail-link">${logoHTML}${store.charAt(0).toUpperCase() + store.slice(1)}</a>`;
+                        }
+                    }
+                }
+                return linksHTML || '<span>No store links available.</span>';
+            };
+            const platformsHTML = (gameData.platforms && Array.isArray(gameData.platforms) && gameData.platforms.length > 0) ? gameData.platforms.map(p => `${getLogoHTML(p, platformLogos)}${p}`).join(', ') : 'N/A';
+            const detailCoverWidth = getComputedStyle(document.documentElement).getPropertyValue('--detail-cover-width').trim();
+            const detailCoverHeight = getComputedStyle(document.documentElement).getPropertyValue('--detail-cover-height').trim();
+
+            const isSaved = userSavedGameIds.has(String(gameData.game_id));
+            const starChar = isSaved ? '★' : '☆';
+            const starTitle = isSaved ? "Remove from favorites" : "Save to favorites";
+
+            let detailHTML = `
+                <button class="close-detail-btn" id="detailPanelCloseBtnRender">← Back</button>
+                <div class="detail-header">
+                    ${pageToken ? `<span class="favorite-star ${isSaved ? 'saved' : ''}" data-game-id-detail="${gameData.game_id}" title="${starTitle}">${starChar}</span>` : ''}
+                    <div class="detail-cover"> <img src="${gameData.cover_url || `https://placehold.co/${detailCoverWidth.replace('px','')}x${detailCoverHeight.replace('px','')}/2c2c2e/e0e0e0?text=No+Cover`}" alt="${gameData.name || 'Game Cover'}" onerror="this.src='https://placehold.co/${detailCoverWidth.replace('px','')}x${detailCoverHeight.replace('px','')}/2c2c2e/e0e0e0?text=Error';"/> </div>
+                    <div class="detail-title-section"> <h1>${gameData.name || "Unknown Title"}</h1> <div class="detail-info-grid"> <div class="detail-info-item"><strong>Released:</strong> ${gameData.release_date_human || 'N/A'}</div> <div class="detail-info-item"><strong>Platforms:</strong> ${platformsHTML}</div> </div> <div class="detail-info-item"><strong>Genres:</strong> <div class="detail-tags-container">${renderListAsTags(gameData.genres, 'genre')}</div> </div> <div class="detail-info-item"><strong>Themes:</strong> <div class="detail-tags-container">${renderListAsTags(gameData.themes, 'theme')}</div> </div> </div>
+                </div>
+                <div class="detail-section"><h2>Storyline</h2><p>${gameData.storyline || "No storyline available."}</p></div>
+                <div class="detail-section"><h2>Links</h2><div class="detail-links-container">${renderLinks(gameData.urls)}</div></div>`;
+
+            if (gameData.screenshots && Array.isArray(gameData.screenshots) && gameData.screenshots.length > 0 && !(gameData.screenshots.length === 1 && gameData.screenshots[0].includes("placehold.co"))) {
+                detailHTML += `<div class="detail-section"><h2>Screenshots</h2><div class="screenshot-carousel" id="screenshotCarousel-${gameData.game_id}"><div class="carousel-track">${gameData.screenshots.map(ss => `<div class="carousel-slide"><img src="${ss}" alt="Screenshot" onerror="this.parentElement.style.display='none';"/></div>`).join('')}</div> ${gameData.screenshots.length > 1 ? `<button class="carousel-button prev" data-carousel-id="${gameData.game_id}" data-direction="-1">&#10094;</button><button class="carousel-button next" data-carousel-id="${gameData.game_id}" data-direction="1">&#10095;</button>` : ''}</div></div>`;
+            }
+            detailHTML += `<div class="detail-section"><h2>Game Modes</h2><div class="detail-tags-container">${renderListAsTags(gameData.game_modes, 'mode')}</div></div> <div class="detail-section"><h2>Multiplayer Modes</h2><p>${(gameData.multiplayer_modes && Array.isArray(gameData.multiplayer_modes) && gameData.multiplayer_modes.length > 0) ? gameData.multiplayer_modes.join(', ') : 'N/A'}</p></div> <div class="detail-section"><h2>Languages Supported</h2><p>${(gameData.language_supports && Array.isArray(gameData.language_supports) && gameData.language_supports.length > 0) ? gameData.language_supports.join(', ') : 'N/A'}</p></div>`;
+
+            if (gameData.similar_games && Array.isArray(gameData.similar_games) && gameData.similar_games.length > 0) {
+                const cardImgWidthSim = getComputedStyle(document.documentElement).getPropertyValue('--card-image-width').trim().replace('px','');
+                const cardImgHeightSim = getComputedStyle(document.documentElement).getPropertyValue('--card-image-height').trim().replace('px','');
+                detailHTML += `<div class="detail-section"><h2>Similar Games</h2><div class="similar-games-grid">${gameData.similar_games.map(simGame => { if (!simGame || typeof simGame.game_id === 'undefined') return ''; return `<div class="game-card similar-game-card" data-game-id="${simGame.game_id}" role="button" tabindex="0"><div class="game-card-clickable-area"><div class="game-card-cover-container"><img src="${simGame.cover_url || `https://placehold.co/${cardImgWidthSim}x${cardImgHeightSim}/2c2c2e/e0e0e0?text=N/A`}" alt="${simGame.name || 'Similar Game'}"/></div><div class="game-card-info"><h3 class="game-title">${simGame.name || "Unknown Title"}</h3></div></div></div>`; }).join('')}</div></div>`;
+            }
+
+            detailPanelContent.innerHTML = detailHTML;
+            const renderCloseBtn = detailPanelContent.querySelector('#detailPanelCloseBtnRender');
+            if (renderCloseBtn) renderCloseBtn.addEventListener('click', closeDetailPanel);
+
+            detailPanelContent.querySelectorAll('.similar-game-card').forEach(cardElement => {
+                cardElement.addEventListener('click', () => {
+                    const simGameId = cardElement.dataset.gameId;
+                    if (simGameId) showDetailPanel(String(simGameId));
+                });
+            });
+
+            if (pageToken) {
+                const detailStar = detailPanelContent.querySelector('.favorite-star[data-game-id-detail]');
+                if (detailStar) {
+                    detailStar.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleFavoriteStatus(gameData, detailStar);
+                    });
+                }
+            }
+
+            const carousel = document.getElementById(`screenshotCarousel-${gameData.game_id}`);
+            if (carousel && gameData.screenshots && gameData.screenshots.length > 1) {
+                let currentSlide = 0;
+                const track = carousel.querySelector('.carousel-track');
+                const slides = Array.from(carousel.querySelectorAll('.carousel-slide'));
+                const totalSlides = slides.length;
+                const nextButton = carousel.querySelector('.carousel-button.next');
+                const prevButton = carousel.querySelector('.carousel-button.prev');
+
+                if (track && slides.length > 0 && nextButton && prevButton) {
+                     const updateCarousel = () => { track.style.transform = `translateX(-${currentSlide * 100}%)`; };
+                    nextButton.addEventListener('click', () => { currentSlide = (currentSlide + 1) % totalSlides; updateCarousel(); });
+                    prevButton.addEventListener('click', () => { currentSlide = (currentSlide - 1 + totalSlides) % totalSlides; updateCarousel(); });
+                    updateCarousel();
+                }
+            }
+
+            gameDetailPanel.scrollTop = 0;
+        }
+
+        function closeDetailPanel() {
+            detailsColumn.style.transform = 'translateX(100%)';
+            currentDetailGameId = null;
+            setTimeout(() => {
+                if (detailsColumn.style.transform === 'translateX(100%)') {
+                    gameDetailPanel.style.display = 'none';
+                    detailPanelContent.innerHTML = '';
+                }
+            }, 500);
+        }
+
+        async function toggleFavoriteStatus(gameObject, starElement) {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                showToast("Please log in to save or remove games.", "error");
+                return;
+            }
+            if (!gameObject || typeof gameObject.game_id === 'undefined') {
+                showToast("Cannot save: Game data is incomplete.", "error");
+                return;
+            }
+
+            const gameIdStr = String(gameObject.game_id);
+            const isCurrentlySaved = userSavedGameIds.has(gameIdStr);
+            const method = isCurrentlySaved ? 'DELETE' : 'POST';
+            const endpoint = isCurrentlySaved ? `${API_BASE_URL}/saved-games/${gameIdStr}` : `${API_BASE_URL}/saved-games`;
+
+            let payload = {};
+            if (method === 'POST') {
+                let linksListPayload = [];
+                if (gameObject.urls && typeof gameObject.urls === 'object') {
+                    for (const [key, urlValue] of Object.entries(gameObject.urls)) {
+                        if (urlValue && String(urlValue).trim()) {
+                            const label = key.charAt(0).toUpperCase() + key.slice(1);
+                            linksListPayload.push({ "label": label, "url": String(urlValue).trim() });
+                        }
+                    }
+                }
+                payload = {
+                    game_id: gameIdStr,
+                    game_name: gameObject.name || "Unknown Game",
+                    image_url: gameObject.cover_url || "",
+                    links_list: linksListPayload
+                };
+            }
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: method === 'POST' ? JSON.stringify(payload) : null
+                });
+                const responseData = await response.json();
+
+                if (response.ok) {
+                    if (isCurrentlySaved) {
+                        userSavedGameIds.delete(gameIdStr);
+                        showToast(`${gameObject.name || 'Game'} removed from favorites.`, 'info');
+                    } else {
+                        userSavedGameIds.add(gameIdStr);
+                        showToast(`${gameObject.name || 'Game'} saved to favorites!`, 'success');
+                    }
+                    updateStarIconVisuals(gameIdStr, !isCurrentlySaved);
+                } else if (response.status === 409 && method === 'POST') {
+                    userSavedGameIds.add(gameIdStr);
+                    showToast(responseData.message || `${gameObject.name || 'Game'} is already in your favorites.`, 'info');
+                    updateStarIconVisuals(gameIdStr, true);
+                }
+                else {
+                    showToast(`Error: ${responseData.message || response.statusText || 'Operation failed.'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error toggling favorite status:', error);
+                showToast('Could not update favorite status. Please try again.', 'error');
+            }
+        }
+
+        function updateStarIconVisuals(gameId, isSaved) {
+            document.querySelectorAll(`.game-card[data-game-id="${gameId}"] .favorite-star`).forEach(star => {
+                star.innerHTML = isSaved ? '★' : '☆';
+                star.classList.toggle('saved', isSaved);
+                star.title = isSaved ? "Remove from favorites" : "Save to favorites";
+            });
+
+            if (currentDetailGameId === gameId) {
+                const detailStar = gameDetailPanel.querySelector(`.favorite-star[data-game-id-detail="${gameId}"]`);
+                if (detailStar) {
+                    detailStar.innerHTML = isSaved ? '★' : '☆';
+                    detailStar.classList.toggle('saved', isSaved);
+                    detailStar.title = isSaved ? "Remove from favorites" : "Save to favorites";
+                }
+            }
+        }
+
+        const tempPlatformLogos = { "PC (Microsoft Windows)": "https://img.icons8.com/ios-filled/50/ffffff/windows8.png", "Windows": "https://img.icons8.com/ios-filled/50/ffffff/windows8.png", "Xbox Series X|S": "https://img.icons8.com/ios-filled/50/ffffff/xbox.png", "PlayStation 5": "https://img.icons8.com/ios-filled/50/ffffff/playstation.png", "PlayStation 4": "https://img.icons8.com/ios-filled/50/ffffff/playstation.png", "PlayStation 3": "https://img.icons8.com/ios-filled/50/ffffff/playstation.png","PlayStation 2": "https://img.icons8.com/ios-filled/50/ffffff/playstation.png","PlayStation": "https://img.icons8.com/ios-filled/50/ffffff/playstation.png","Xbox One": "https://img.icons8.com/ios-filled/50/ffffff/xbox.png","Xbox 360": "https://img.icons8.com/ios-filled/50/ffffff/xbox.png","Xbox": "https://img.icons8.com/ios-filled/50/ffffff/xbox.png","Nintendo Switch": "https://img.icons8.com/ios-filled/50/ffffff/nintendo-switch.png","Nintendo 3DS": "https://img.icons8.com/ios-filled/50/ffffff/nintendo-3ds.png","Nintendo DS": "https://img.icons8.com/ios-filled/50/ffffff/nintendo-ds.png","Wii U": "https://img.icons8.com/ios-filled/50/ffffff/wii-u.png","Wii": "https://img.icons8.com/ios-filled/50/ffffff/wii.png","GameCube": "https://img.icons8.com/ios-filled/50/ffffff/gamecube.png","Nintendo 64": "https://img.icons8.com/ios-filled/50/ffffff/nintendo-64.png","Game Boy Advance": "https://img.icons8.com/ios-filled/50/ffffff/game-boy.png","Game Boy Color": "https://img.icons8.com/ios-filled/50/ffffff/game-boy.png","Game Boy": "https://img.icons8.com/ios-filled/50/ffffff/game-boy.png","macOS": "https://img.icons8.com/ios-filled/50/ffffff/mac-os.png","Linux": "https://img.icons8.com/ios-filled/50/ffffff/linux.png","Android": "https://img.icons8.com/ios-filled/50/ffffff/android.png","iOS": "https://img.icons8.com/ios-filled/50/ffffff/ios.png","Apple Arcade": "https://img.icons8.com/ios-filled/50/ffffff/mac-os.png","Dreamcast": "https://img.icons8.com/ios-filled/50/ffffff/sega.png","Sega Saturn": "https://img.icons8.com/ios-filled/50/ffffff/sega.png","Genesis": "https://img.icons8.com/ios-filled/50/ffffff/sega.png","Atari 2600": "https://img.icons8.com/ios-filled/50/ffffff/atari.png","NES": "https://img.icons8.com/ios-filled/50/ffffff/nintendo.png","SNES": "https://img.icons8.com/ios-filled/50/ffffff/nintendo.png", "Arcade": "https://img.icons8.com/ios-filled/50/ffffff/arcade-cabinet.png"};
+        Object.assign(platformLogos, tempPlatformLogos);
+        const tempStoreLogos = {"steam": "https://img.icons8.com/ios-filled/50/ffffff/steam.png","gog": "https://img.icons8.com/ios-filled/50/ffffff/gog-galaxy.png","xbox": "https://img.icons8.com/ios-filled/50/ffffff/xbox.png","playstation": "https://img.icons8.com/ios-filled/50/ffffff/playstation.png","epic": "https://img.icons8.com/ios-filled/50/ffffff/epic-games.png","nintendo": "https://img.icons8.com/ios-filled/50/ffffff/nintendo-switch.png","official": "https://img.icons8.com/ios-filled/50/ffffff/internet.png"};
+        Object.assign(storeLogos, tempStoreLogos);
+
+    </script>
+</body>
+</html>

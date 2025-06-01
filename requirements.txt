@@ -1,0 +1,9 @@
+pandas
+numpy
+PyJWT
+sentence-transformers
+scikit-learn
+Flask
+flask-cors
+torch
+gunicorn

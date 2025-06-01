@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Pusher - My Games</title> <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@300;400;500&display=swap');
+
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #282828;
+            --text-color: #cccccc;
+            --text-light: #e0e0e0;
+            --border-color: #444444;
+            --accent-color: #00c6ff;
+            --header-height: 70px;
+            --card-image-width: 120px;
+            --card-image-height: 168px;
+            --star-remove-color: #ff6b6b;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Roboto', sans-serif;
+            font-weight: 300;
+            margin: 0; padding: 0;
+            color: var(--text-color);
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-container {
+            text-align: center;
+            padding: 50px 20px;
+            font-family: 'Press Start 2P', cursive;
+            color: var(--text-light);
+            font-size: 1em;
+        }
+        .loading-container .loader { margin-bottom: 20px; }
+
+
+        header {
+            width: 100%; height: var(--header-height);
+            background-color: rgba(20, 20, 20, 0.85); backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px); padding: 0 40px; box-sizing: border-box;
+            display: flex; justify-content: space-between; align-items: center;
+            position: fixed; top: 0; left: 0; z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+        }
+        header .logo-link { text-decoration: none; }
+        header .logo { font-family: 'Press Start 2P', cursive; font-size: 1.6em; color: var(--text-light); }
+        header nav { display: flex; align-items: center; }
+        header nav a { color: #bbbbbb; text-decoration: none; margin-left: 30px; font-size: 0.95em; transition: color 0.3s ease; }
+        header nav a:hover { color: #ffffff; }
+        .nav-username { color: var(--text-light); margin-left: 20px; font-size: 0.9em; }
+
+
+        .main-content {
+            padding-top: calc(var(--header-height) + 30px);
+            width: 100%; max-width: 1200px;
+            margin: 0 auto; padding-left: 20px; padding-right: 20px;
+            box-sizing: border-box;
+        }
+
+        .main-content h1 {
+            font-family: 'Press Start 2P', cursive; color: var(--text-light);
+            text-align: center; margin-bottom: 30px;
+        }
+
+        .favorites-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 25px;
+        }
+
+        .game-card {
+            background-color: var(--card-bg); border-radius: 8px;
+            border: 1px solid var(--border-color); padding: 15px;
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center; transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            position: relative;
+        }
+        .game-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+        .game-card-cover-container {
+            width: var(--card-image-width); height: var(--card-image-height);
+            border-radius: 6px; overflow: hidden; margin-bottom: 12px; background-color: #333;
+        }
+        .game-card-cover-container img { width: 100%; height: 100%; object-fit: cover; }
+        .game-card .game-title { font-size: 1.1em; color: var(--text-light); font-weight: 500; margin: 0 0 10px 0; }
+
+        .game-links-mygames { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 10px; }
+        .game-links-mygames a {
+            background-color: #383838; color: var(--text-light); padding: 5px 8px;
+            border-radius: 4px; text-decoration: none; font-size: 0.8em;
+            transition: background-color 0.2s ease;
+        }
+        .game-links-mygames a:hover { background-color: var(--accent-color); color: var(--bg-color); }
+
+        .remove-icon {
+            font-family: 'Arial', sans-serif; font-size: 1.4em; font-weight: bold;
+            color: var(--star-remove-color); cursor: pointer;
+            transition: color 0.2s ease, transform 0.2s ease;
+            padding: 5px; position: absolute; top: 5px; right: 5px;
+        }
+        .remove-icon:hover { transform: scale(1.2); color: #ff4d4d; }
+
+        .message { text-align: center; font-size: 1.1em; color: #888; margin-top: 50px; }
+        .message a { color: var(--accent-color); text-decoration: none; }
+        .message a:hover { text-decoration: underline; }
+
+
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 1050; }
+        .toast-message { padding: 10px 15px; background-color: #333; color: white; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); font-size: 0.9em; opacity: 0; transition: opacity 0.3s ease; }
+        .toast-message.show { opacity: 1; }
+        .toast-message.success { background-color: #51cf66; color: #111; }
+        .toast-message.error { background-color: #ff6b6b; color: white; }
+        .toast-message.info { background-color: #4a4a4a; color: white; }
+
+
+    </style>
+</head>
+<body>
+
+    <header> <a href="index.html" class="logo-link"><div class="logo">Pixel Pusher</div></a> <nav> <a href="index.html">Home</a> <a id="navLoginLink" href="login.html" style="display: inline;">Login</a>
+            <a id="navMyGamesLink" href="my_games.html" style="display: none;">My Games</a>
+            <a id="navLogoutLink" href="#" style="display: none;">Logout</a>
+            <span id="navUsername" class="nav-username" style="display: none;"></span>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <h1>My Games</h1>
+        <div id="loadingContainer" class="loading-container" style="display: block;"> <div class="loader"></div>
+            <p>Loading your saved games...</p>
+        </div>
+        <div id="favoritesGrid" class="favorites-grid">
+
+        </div>
+        <p id="noFavoritesMessage" class="message" style="display: none;">You haven't added any games yet. <a href="index.html">Find some!</a></p>
+        <p id="loginPromptMyGames" class="message" style="display: none;">Please <a href="login.html">login</a> to see your saved games.</p>
+    </main>
+    <div class="toast-container" id="toastContainer"></div>
+
+
+    <script>
+        const API_BASE_URL = '';
+        const favoritesGrid = document.getElementById('favoritesGrid');
+        const loadingContainer = document.getElementById('loadingContainer');
+        const noFavoritesMessage = document.getElementById('noFavoritesMessage');
+        const loginPromptMyGames = document.getElementById('loginPromptMyGames');
+        const toastContainer = document.getElementById('toastContainer');
+
+
+
+        const navLoginLink = document.getElementById('navLoginLink');
+        const navMyGamesLink = document.getElementById('navMyGamesLink');
+        const navLogoutLink = document.getElementById('navLogoutLink');
+        const navUsername = document.getElementById('navUsername');
+        const pageToken = localStorage.getItem("token");
+        const pageUsername = localStorage.getItem("username");
+
+        function updateTopNavigation() {
+            if (pageToken && pageUsername) {
+                if (navLoginLink) navLoginLink.style.display = "none";
+                if (navMyGamesLink) navMyGamesLink.style.display = "inline";
+                if (navLogoutLink) navLogoutLink.style.display = "inline";
+                if (navUsername) { navUsername.textContent = `Hi, ${pageUsername}`; navUsername.style.display = "inline"; }
+            } else {
+                if (navLoginLink) navLoginLink.style.display = "inline";
+                if (navMyGamesLink) navMyGamesLink.style.display = "none";
+                if (navLogoutLink) navLogoutLink.style.display = "none";
+                if (navUsername) navUsername.style.display = "none";
+            }
+        }
+        if (navLogoutLink) {
+            navLogoutLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem("token");
+                localStorage.removeItem("username");
+                window.location.href = 'login.html';
+            });
+        }
+
+
+        function showToast(message, type = 'info', duration = 3000) {
+            const toast = document.createElement('div');
+            toast.className = `toast-message ${type}`;
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        async function loadSavedGames() {
+            if (!pageToken) {
+                loadingContainer.style.display = 'none';
+                noFavoritesMessage.style.display = 'none';
+                loginPromptMyGames.style.display = 'block';
+                favoritesGrid.innerHTML = '';
+                return;
+            }
+
+            loginPromptMyGames.style.display = 'none';
+            loadingContainer.style.display = 'block';
+            noFavoritesMessage.style.display = 'none';
+            favoritesGrid.innerHTML = '';
+
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/saved-games`, {
+                    headers: { 'Authorization': `Bearer ${pageToken}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.games && data.games.length > 0) {
+                        displaySavedGames(data.games);
+                    } else {
+                        noFavoritesMessage.style.display = 'block';
+                    }
+                } else {
+                    if (response.status === 401) {
+                        localStorage.removeItem("token");
+                        localStorage.removeItem("username");
+                        updateTopNavigation();
+                        loginPromptMyGames.style.display = 'block';
+                        showToast("Your session expired. Please log in again.", "error");
+                    } else {
+                        noFavoritesMessage.textContent = 'Could not load saved games. Please try again later.';
+                        noFavoritesMessage.style.display = 'block';
+                        showToast(`Error: ${response.statusText}`, "error");
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching saved games:", error);
+                noFavoritesMessage.textContent = 'An error occurred while fetching your games.';
+                noFavoritesMessage.style.display = 'block';
+                showToast("Network error fetching saved games.", "error");
+            } finally {
+                 loadingContainer.style.display = 'none';
+            }
+        }
+
+        function displaySavedGames(games) {
+            favoritesGrid.innerHTML = '';
+            games.forEach(game => {
+                const card = document.createElement('div');
+                card.classList.add('game-card');
+                card.dataset.gameId = game.game_id;
+
+                let linksHtml = "";
+                if (game.links_list && Array.isArray(game.links_list) && game.links_list.length > 0) {
+                    game.links_list.forEach(linkObj => {
+                        if (linkObj.url && linkObj.url.trim()) {
+                            linksHtml += `<a href="${linkObj.url}" target="_blank" rel="noopener noreferrer">${linkObj.label || 'Link'}</a>`;
+                        }
+                    });
+                } else {
+                    linksHtml = "<span>No links available.</span>";
+                }
+
+
+                card.innerHTML = `
+                    <span class="remove-icon" title="Remove from favorites">&times;</span>
+                    <div class="game-card-cover-container">
+                        <img src="${game.image_url || `https://placehold.co/${getComputedStyle(document.documentElement).getPropertyValue('--card-image-width').replace('px','')}x${getComputedStyle(document.documentElement).getPropertyValue('--card-image-height').replace('px','')}/2c2c2e/e0e0e0?text=No+Image`}" alt="${game.game_name || 'Game Cover'}">
+                    </div>
+                    <h3 class="game-title">${game.game_name || 'Unknown Game'}</h3>
+                    <div class="game-links-mygames">${linksHtml}</div>
+                `;
+
+                card.querySelector('.remove-icon').addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (confirm(`Are you sure you want to remove "${game.game_name}" from your saved games?`)) {
+                        await removeGameFromFavorites(game.game_id, card);
+                    }
+                });
+                favoritesGrid.appendChild(card);
+            });
+        }
+
+        async function removeGameFromFavorites(gameId, cardElement) {
+            if (!pageToken) { showToast("Please log in.", "error"); return; }
+            try {
+                const response = await fetch(`${API_BASE_URL}/saved-games/${gameId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${pageToken}` }
+                });
+                if (response.ok) {
+                    cardElement.remove();
+                    showToast("Game removed from favorites.", "success");
+                    if (favoritesGrid.children.length === 0) {
+                        noFavoritesMessage.style.display = 'block';
+                    }
+                } else {
+                    const data = await response.json();
+                    showToast(`Error removing game: ${data.message || response.statusText}`, "error");
+                }
+            } catch (error) {
+                console.error("Error removing game:", error);
+                showToast("Network error removing game.", "error");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateTopNavigation();
+            loadSavedGames();
+        });
+
+    </script>
+
+</body>
+</html>
