@@ -34,3 +34,5 @@ API calls, backend and frontend connection, game recommendation retrieval, etc. 
 - Accounts created may be deleted after leaving the website since SQL storage in GCR is ephemeral
 - Game search may take longer than expected as resources allocated are minimal to keep costs as low as possible
 
+![](https://github.com/razinlab/GameRecommenderV2/blob/478c433abdca21029fdb5defd6e0138e2b649733/Untitled%20video%20-%20Made%20with%20Clipchamp%20(3).gif)
+
