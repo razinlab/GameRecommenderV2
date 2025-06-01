@@ -19,6 +19,18 @@ Data has been fetched from the IGDB database using their API, narrowed down by t
 ## Results
 API calls, backend and frontend connection, game recommendation retrieval, etc. are all successful. User can input what they want to play in natural language and get back game recommendations, the function retrieves the top 50 and then selects a random 10 (for a better feeling of randomness).
 
+## Changes From V1
+- Using a custom finetuned embedding model instead of the publicly available snowflake-arctic-embed2
+- Added a random search
+- Added info card for each game
+- Changed website UI
+- Changed deployment platform to GCP for simplicity
+
 ## Possible Next Steps
 - Clean up data further, a lot of junk games present and it is unclear which games are fluff and which games people would actually play. Difficult to do so as data must be offloaded to a cloud GPU instance for embedding.
 - Greater filter options. Only way to retrieve games is via natural langauge, hardcoded options may be valuable for greater filtering.
+
+## Things to Note
+- Accounts created may be deleted after leaving the website since SQL storage in GCR is ephemeral
+- Game search may take longer than expected as resources allocated are minimal to keep costs as low as possible
+
