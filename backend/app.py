@@ -138,7 +138,7 @@ def load_recommender_resources():
 
     try:
         recommender_model = SentenceTransformer(MODEL_PATH)
-        print("✅ Recommender Model loaded successfully.")
+        print("Recommender Model loaded successfully.")
     except Exception as e:
         print(f"Error loading recommender model from {MODEL_PATH}: {e}");
         traceback.print_exc();
@@ -146,7 +146,7 @@ def load_recommender_resources():
 
     try:
         game_embeddings = np.load(EMBEDDINGS_PATH)
-        print(f"✅ Recommender Embeddings loaded from {EMBEDDINGS_PATH}. Shape: {game_embeddings.shape}")
+        print(f"Recommender Embeddings loaded from {EMBEDDINGS_PATH}. Shape: {game_embeddings.shape}")
     except Exception as e:
         print(f"Error loading recommender embeddings from {EMBEDDINGS_PATH}: {e}");
         traceback.print_exc();
@@ -176,7 +176,7 @@ def load_recommender_resources():
                                     drop=False)
         game_data_full_df = temp_df
         print(
-            f"✅ Recommender Game data loaded from {GAME_DATA_PATH}. Found {len(game_data_full_df)} games. Index type: {game_data_full_df.index.dtype}, Column '{GAME_ID_COLUMN}' type: {game_data_full_df[GAME_ID_COLUMN].dtype}")
+            f"Recommender Game data loaded from {GAME_DATA_PATH}. Found {len(game_data_full_df)} games. Index type: {game_data_full_df.index.dtype}, Column '{GAME_ID_COLUMN}' type: {game_data_full_df[GAME_ID_COLUMN].dtype}")
         return True
     except Exception as e:
         print(f"Error loading game data CSV from {GAME_DATA_PATH}: {e}");
@@ -189,7 +189,7 @@ if not load_recommender_resources():
 
 
 else:
-    print("✅✅✅ Recommender resources successfully loaded at app initialization. ✅✅✅")
+    print("Recommender resources successfully loaded at app initialization.")
 
 
 def get_minimal_game_details(game_id_orig):
@@ -596,3 +596,4 @@ if __name__ == '__main__':
             app.run(debug=True, host='0.0.0.0', port=5000)
         else:
             print("Flask server not started due to failure in loading recommender resources.")
+
