@@ -39,7 +39,7 @@ def load_resources():
         raise FileNotFoundError(f"Model directory not found: {MODEL_PATH}")
     try:
         model = SentenceTransformer(MODEL_PATH)
-        print("✅ Model loaded successfully.")
+        print("Model loaded successfully.")
     except Exception as e:
         print(f"Error loading the sentence transformer model: {e}")
         raise
@@ -50,7 +50,7 @@ def load_resources():
         raise FileNotFoundError(f"Game embeddings file not found: {EMBEDDINGS_PATH}")
     try:
         game_embeddings = np.load(EMBEDDINGS_PATH)
-        print(f"✅ Game embeddings loaded successfully. Shape: {game_embeddings.shape}")
+        print(f"Game embeddings loaded successfully. Shape: {game_embeddings.shape}")
     except Exception as e:
         print(f"Error loading game embeddings: {e}")
         raise
@@ -73,7 +73,7 @@ def load_resources():
                 raise ValueError(f"Missing required column: {col}. Please configure it in recommender.py.")
 
         game_titles = games_df[GAME_TITLE_COLUMN]
-        print(f"✅ Game data loaded successfully. Found {len(games_df)} games.")
+        print(f"Game data loaded successfully. Found {len(games_df)} games.")
     except Exception as e:
         print(f"Error loading game data CSV: {e}")
         raise
@@ -183,3 +183,4 @@ if __name__ == "__main__":
             print("No results found or an error occurred during direct testing.")
     else:
         print("Recommender resources not loaded. Cannot run test. Check errors during initial loading.")
+
